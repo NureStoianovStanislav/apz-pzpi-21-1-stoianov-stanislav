@@ -1,0 +1,6 @@
+[package]
+name = "apz-pzpi-21-1-stoianov-stanislav-task2"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
