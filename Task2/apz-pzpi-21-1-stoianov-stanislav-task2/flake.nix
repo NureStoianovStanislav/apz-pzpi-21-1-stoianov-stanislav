@@ -18,6 +18,9 @@
               extensions = [ "rust-src" "clippy" "rust-analyzer" ];
             })
           ];
+          nativeBuildInputs = with pkgs;
+            [ ] ++ lib.optionals stdenv.isDarwin
+              (with darwin.apple_sdk.frameworks; [ SystemConfiguration ]);
         };
       }
     );
