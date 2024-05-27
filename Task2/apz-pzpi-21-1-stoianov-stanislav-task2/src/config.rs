@@ -1,8 +1,9 @@
 use std::{path::PathBuf, str::FromStr};
 
 use anyhow::Context;
+use argon2::Params;
 use secrecy::Secret;
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
 use serde_aux::field_attributes::deserialize_number_from_string;
 use serde_with::serde_as;
 use strum::VariantNames;
@@ -49,10 +50,8 @@ pub struct DatabaseConfig {
 #[derive(Clone, Debug, Deserialize)]
 pub struct HasherConfig {
     pub secret: Secret<String>,
-    pub memory_size: u32,
-    pub iterations: u32,
-    pub parallelism_factor: u32,
-    pub output_length: Option<usize>,
+    #[serde(flatten, deserialize_with = "deserialize_argon2_params")]
+    pub params: Params,
 }
 
 impl Config {
@@ -61,9 +60,9 @@ impl Config {
             .add_source(config::File::from(config_path(environment()?)?))
             .add_source(config::Environment::default().separator("__"))
             .build()
-            .context("failed to read config")?
+            .context("read config")?
             .try_deserialize()
-            .context("failed to parse config")
+            .context("parse config")
     }
 }
 
@@ -76,7 +75,29 @@ fn environment() -> anyhow::Result<Environment> {
 
 fn config_path(environment: Environment) -> anyhow::Result<PathBuf> {
     std::env::current_dir()
-        .context("failed to read current working directory")
+        .context("read current working directory")
         .map(|dir| dir.join("config").join(format!("{environment}.yaml")))
-        .context("failed to read config file")
+        .context("read config file")
+}
+
+#[derive(Deserialize)]
+struct Argon2Params {
+    pub memory_size: u32,
+    pub iterations: u32,
+    pub parallelism_factor: u32,
+    pub output_length: Option<usize>,
+}
+
+fn deserialize_argon2_params<'de, D>(deserializer: D) -> Result<Params, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let params = Argon2Params::deserialize(deserializer)?;
+    Params::new(
+        params.memory_size,
+        params.iterations,
+        params.parallelism_factor,
+        params.output_length,
+    )
+    .map_err(serde::de::Error::custom)
 }

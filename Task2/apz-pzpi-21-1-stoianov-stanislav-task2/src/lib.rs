@@ -7,4 +7,6 @@ mod database;
 mod error;
 mod id;
 
+mod auth;
+
 use error::Result;
