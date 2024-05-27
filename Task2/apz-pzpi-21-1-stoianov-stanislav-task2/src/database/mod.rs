@@ -1,3 +1,7 @@
+mod secret;
+
+pub use secret::DbSecret;
+
 use secrecy::ExposeSecret;
 use sqlx::{
     postgres::{PgConnectOptions, PgPoolOptions, PgSslMode},

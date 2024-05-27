@@ -1,8 +1,10 @@
 use core::fmt;
 use std::{str::FromStr, sync::OnceLock};
 
-use aes::cipher::{BlockDecrypt, BlockEncrypt, KeyInit};
-use secrecy::{ExposeSecret, Secret};
+use aes::{
+    cipher::{BlockDecrypt, BlockEncrypt},
+    Aes128,
+};
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 
 #[derive(Clone, Copy, SerializeDisplay, DeserializeFromStr)]
@@ -20,12 +22,12 @@ pub const fn tag(s: &str) -> u64 {
 }
 
 impl<const TAG: u64> Id<TAG> {
-    pub fn new(id: u64, key: &Secret<[u8; 16]>) -> Self {
-        Self(encrypt(TAG, id, key))
+    pub fn new(id: u64, cipher: &Aes128) -> Self {
+        Self(encrypt(TAG, id, cipher))
     }
 
-    pub fn to_u64(self, key: &Secret<[u8; 16]>) -> u64 {
-        decrypt(self.0, key)
+    pub fn to_u64(self, cipher: &Aes128) -> u64 {
+        decrypt(self.0, cipher)
     }
 }
 
@@ -49,16 +51,14 @@ impl<const TAG: u64> FromStr for Id<TAG> {
     }
 }
 
-fn encrypt(tag: u64, id: u64, key: &Secret<[u8; 16]>) -> u128 {
-    let cipher = aes::Aes128::new(key.expose_secret().into());
+fn encrypt(tag: u64, id: u64, cipher: &Aes128) -> u128 {
     let tagged = (tag as u128) << 64 | id as u128;
     let mut bytes = tagged.to_le_bytes().into();
     cipher.encrypt_block(&mut bytes);
     u128::from_le_bytes(bytes.into())
 }
 
-fn decrypt(id: u128, key: &Secret<[u8; 16]>) -> u64 {
-    let cipher = aes::Aes128::new(key.expose_secret().into());
+fn decrypt(id: u128, cipher: &Aes128) -> u64 {
     let mut bytes = id.to_le_bytes().into();
     cipher.decrypt_block(&mut bytes);
     u128::from_le_bytes(bytes.into()) as u64
