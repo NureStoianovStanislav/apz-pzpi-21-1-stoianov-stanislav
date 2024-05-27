@@ -4,6 +4,7 @@ pub use secret::DbSecret;
 
 use secrecy::ExposeSecret;
 use sqlx::{
+    error::{DatabaseError, ErrorKind},
     postgres::{PgConnectOptions, PgPoolOptions, PgSslMode},
     Pool, Postgres,
 };
@@ -25,4 +26,8 @@ pub fn connect(config: DatabaseConfig) -> Database {
             PgSslMode::Prefer
         });
     PgPoolOptions::new().connect_lazy_with(connect_options)
+}
+
+pub fn error_kind(error: &sqlx::Error) -> Option<ErrorKind> {
+    error.as_database_error().map(DatabaseError::kind)
 }

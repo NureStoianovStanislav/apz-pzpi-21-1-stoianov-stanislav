@@ -1,13 +1,14 @@
 use core::fmt;
 
-use anyhow::Context;
 use axum::{http::StatusCode, response::IntoResponse, Json};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("validation error: {0}")]
+    #[error("account already exists")]
+    AccountExists,
+    #[error("{0}")]
     Validation(&'static str),
     #[allow(private_interfaces)]
     #[error("an unexpected error occurred")]
@@ -22,6 +23,7 @@ struct ErrorMessage {
 impl IntoResponse for Error {
     fn into_response(self) -> axum::response::Response {
         let code = match self {
+            Error::AccountExists => StatusCode::CONFLICT,
             Error::Validation(_) => StatusCode::UNPROCESSABLE_ENTITY,
             Error::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
         };

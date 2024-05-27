@@ -1,4 +1,10 @@
-use crate::{database::Database, state::AppState};
+use sqlx::error::ErrorKind;
+
+use crate::{
+    database::{error_kind, Database},
+    error::Error,
+    state::AppState,
+};
 
 use super::{email::Email, password::Password, Credentials, NewUser, RefreshToken};
 
@@ -15,9 +21,9 @@ pub async fn sign_up(credentials: Credentials, state: AppState) -> crate::Result
     save_user(&user, &state.database).await
 }
 
-#[tracing::instrument(skip(db), err(Debug))]
+#[tracing::instrument(skip(db))]
 async fn save_user(user: &NewUser, db: &Database) -> crate::Result<()> {
-    sqlx::query(
+    match sqlx::query(
         "
         insert into users
           (email, password_hash, refresh_token)
@@ -29,6 +35,14 @@ async fn save_user(user: &NewUser, db: &Database) -> crate::Result<()> {
     .bind(&user.password_hash)
     .bind(&user.refresh_token)
     .execute(db)
-    .await?;
-    Ok(())
+    .await
+    {
+        Err(e) if error_kind(&e) == Some(ErrorKind::UniqueViolation) => {
+            Err(Error::AccountExists).inspect_err(|e| tracing::warn!("{e:?}"))
+        }
+        other => other
+            .map(|_| ())
+            .map_err(Error::from)
+            .inspect_err(|e| tracing::error!("{e:?}")),
+    }
 }
