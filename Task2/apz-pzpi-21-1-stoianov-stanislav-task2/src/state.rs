@@ -1,20 +1,27 @@
+use std::sync::Arc;
+
+use aes::{cipher::KeyInit, Aes128};
+
 use crate::{
-    config::{AppConfig, HasherConfig},
+    config::{AppConfig, HasherConfig, JwtConfig},
     database::{self, Database},
 };
 
 #[derive(Clone)]
 pub struct AppState {
-    pub hasher: HasherConfig,
     pub database: Database,
+    pub id_cipher: Arc<Aes128>,
+    pub jwt_config: Arc<JwtConfig>,
+    pub hasher_config: Arc<HasherConfig>,
 }
 
 impl AppState {
     pub fn init(config: AppConfig) -> Self {
-        let database = database::connect(config.database);
         Self {
-            hasher: config.hasher,
-            database,
+            database: database::connect(config.database),
+            id_cipher: Arc::new(Aes128::new(&config.id_key.into())),
+            jwt_config: Arc::new(config.jwt),
+            hasher_config: Arc::new(config.hasher),
         }
     }
 }

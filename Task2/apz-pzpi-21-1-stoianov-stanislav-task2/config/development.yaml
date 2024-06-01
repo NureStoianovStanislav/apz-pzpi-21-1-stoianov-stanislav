@@ -10,6 +10,8 @@ database:
   database: postgres
   require_ssl: false
 
+id_key: "quuxquuxquuxquux"
+
 hasher:
   secret: ""
   memory_size: 16
@@ -17,3 +19,6 @@ hasher:
   parallelism_factor: 1
   output_length: 32
 
+jwt:
+  secret: ""
+  access_ttl: 900

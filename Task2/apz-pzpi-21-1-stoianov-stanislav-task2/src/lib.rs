@@ -9,4 +9,4 @@ mod id;
 
 mod auth;
 
-use error::Result;
+use error::*;
