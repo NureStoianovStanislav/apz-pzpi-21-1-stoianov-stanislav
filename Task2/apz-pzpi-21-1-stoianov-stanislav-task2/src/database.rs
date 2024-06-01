@@ -1,7 +1,3 @@
-mod secret;
-
-pub use secret::DbSecret;
-
 use secrecy::ExposeSecret;
 use sqlx::{
     error::{DatabaseError, ErrorKind},
