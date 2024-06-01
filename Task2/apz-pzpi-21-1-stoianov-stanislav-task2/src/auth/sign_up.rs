@@ -54,7 +54,7 @@ async fn save_user(user: &NewUser, db: &Database) -> crate::Result<()> {
     .await
     {
         Err(e) if error_kind(&e) == Some(ErrorKind::UniqueViolation) => {
-            Err(Error::AccountExists).inspect_err(|e| tracing::warn!("{e:?}"))
+            Err(Error::AccountExists).inspect_err(|e| tracing::debug!("{e:?}"))
         }
         other => other
             .map(|_| ())
