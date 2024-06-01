@@ -10,7 +10,7 @@ use crate::{
 use super::{
     email::Email,
     password::{hash_password, Password, PasswordHash},
-    token::{new_refresh_secret as new_refresh_token, RefreshToken},
+    token::RefreshSecret,
     Credentials,
 };
 
@@ -18,7 +18,7 @@ use super::{
 struct NewUser {
     email: Email,
     password_hash: PasswordHash,
-    refresh_token: RefreshToken,
+    refresh_secret: RefreshSecret,
 }
 
 #[tracing::instrument(skip(state))]
@@ -28,11 +28,11 @@ pub async fn sign_up(credentials: Credentials, state: AppState) -> crate::Result
     let password_hash =
         instrument_blocking(move || hash_password(&password, (*state.hasher_config).clone()))
             .await??;
-    let refresh_token = new_refresh_token();
+    let refresh_secret = RefreshSecret::new();
     let user = NewUser {
         email,
         password_hash,
-        refresh_token,
+        refresh_secret,
     };
     save_user(&user, &state.database).await
 }
@@ -42,14 +42,14 @@ async fn save_user(user: &NewUser, db: &Database) -> crate::Result<()> {
     match sqlx::query(
         "
         insert into users
-          (email, password_hash, refresh_token)
+          (email, password_hash, refresh_secret)
         values
           ($1, $2, $3);
         ",
     )
     .bind(&user.email)
     .bind(&user.password_hash)
-    .bind(&user.refresh_token)
+    .bind(&user.refresh_secret)
     .execute(db)
     .await
     {

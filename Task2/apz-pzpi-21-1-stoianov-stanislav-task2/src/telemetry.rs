@@ -9,6 +9,7 @@ pub fn init() {
         .init()
 }
 
+// TODO doesn't enter span for some reason
 pub(crate) async fn instrument_blocking<F, R>(f: F) -> anyhow::Result<R>
 where
     F: FnOnce() -> R + Send + 'static,

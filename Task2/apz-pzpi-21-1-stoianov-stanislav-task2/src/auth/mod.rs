@@ -6,6 +6,7 @@ mod token;
 
 pub use sign_in::sign_in;
 pub use sign_up::sign_up;
+pub use token::parse_access_token;
 
 use serde::Deserialize;
 

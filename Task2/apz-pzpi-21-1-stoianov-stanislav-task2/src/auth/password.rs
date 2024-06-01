@@ -1,3 +1,5 @@
+use core::fmt;
+
 use anyhow::Context;
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHasher, PasswordVerifier, SaltString},
@@ -5,13 +7,13 @@ use argon2::{
 };
 use secrecy::{ExposeSecret, Secret};
 
-use crate::{config::HasherConfig, database::DbSecret, error::Error};
+use crate::{config::HasherConfig, error::Error};
 
 pub type UnvalidatedPassword = Secret<String>;
 
-#[derive(Clone, Debug, sqlx::Type)]
+#[derive(Clone, sqlx::Type)]
 #[sqlx(transparent, no_pg_array)]
-pub struct PasswordHash(DbSecret<String>);
+pub struct PasswordHash(String);
 
 #[derive(Debug, sqlx::Type)]
 #[sqlx(transparent, no_pg_array)]
@@ -56,8 +58,7 @@ pub fn verify_password(
     let password = password.expose_secret().as_bytes();
     match hash {
         Some(hash) => {
-            let hash =
-                argon2::PasswordHash::new(hash.0.expose_secret()).context("parse password hash")?;
+            let hash = argon2::PasswordHash::new(&hash.0).context("parse password hash")?;
             hasher
                 .verify_password(password, &hash)
                 .map_err(|_| Error::InvalidCredentials)
@@ -70,18 +71,17 @@ pub fn verify_password(
 }
 
 fn hash_bytes(hasher: Argon2<'_>, password: &[u8]) -> crate::Result<PasswordHash> {
-    let salt = &SaltString::generate(&mut OsRng);
-    let hash = hasher
-        .hash_password(password, salt)
-        .map(|hash| PasswordHash(DbSecret::new(hash.to_string())))
-        .context("hash password")?;
-    Ok(hash)
+    hasher
+        .hash_password(password, &SaltString::generate(&mut OsRng))
+        .map(|hash| PasswordHash(hash.to_string()))
+        .context("hash password")
+        .map_err(crate::Error::from)
 }
 
 fn hasher(secret: &[u8], params: Params) -> crate::Result<Argon2<'_>> {
-    let hasher = Argon2::new_with_secret(secret, Algorithm::default(), Version::default(), params)
-        .context("instantiate hasher")?;
-    Ok(hasher)
+    Argon2::new_with_secret(secret, Algorithm::default(), Version::default(), params)
+        .context("instantiate hasher")
+        .map_err(crate::Error::from)
 }
 
 impl TryFrom<UnvalidatedPassword> for Password {
@@ -89,5 +89,11 @@ impl TryFrom<UnvalidatedPassword> for Password {
 
     fn try_from(value: UnvalidatedPassword) -> Result<Self, Self::Error> {
         Self::new(value)
+    }
+}
+
+impl fmt::Debug for PasswordHash {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("PasswordHash(...)")
     }
 }

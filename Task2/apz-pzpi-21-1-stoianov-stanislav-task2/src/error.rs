@@ -8,6 +8,8 @@ pub enum Error {
     Validation(&'static str),
     #[error("account already exists")]
     AccountExists,
+    #[error("sign in to continue")]
+    LoggedOff,
     #[error("wrong email or password")]
     InvalidCredentials,
     #[error("an unexpected error occurred")]
