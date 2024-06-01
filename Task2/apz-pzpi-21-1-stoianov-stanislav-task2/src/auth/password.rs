@@ -46,7 +46,7 @@ pub fn hash_password(password: &Password, config: HasherConfig) -> crate::Result
     hash_bytes(hasher, password)
 }
 
-#[tracing::instrument(skip_all, err(Debug))]
+#[tracing::instrument(skip_all, err(Debug, level = "debug"))]
 pub fn verify_password(
     password: &UnvalidatedPassword,
     hash: Option<&PasswordHash>,
