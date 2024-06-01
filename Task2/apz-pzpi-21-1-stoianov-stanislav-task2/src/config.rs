@@ -1,11 +1,11 @@
-use std::{path::PathBuf, str::FromStr};
+use std::{path::PathBuf, str::FromStr, time::Duration};
 
 use anyhow::Context;
 use argon2::Params;
 use secrecy::Secret;
 use serde::{Deserialize, Deserializer};
 use serde_aux::field_attributes::deserialize_number_from_string;
-use serde_with::serde_as;
+use serde_with::{serde_as, Bytes, DurationSeconds};
 use strum::VariantNames;
 use strum_macros::{Display, EnumString, VariantNames};
 
@@ -23,13 +23,16 @@ pub struct Config {
     pub app: AppConfig,
 }
 
+#[serde_as]
 #[derive(Clone, Debug, Deserialize)]
 pub struct AppConfig {
     pub database: DatabaseConfig,
+    #[serde_as(as = "Bytes")]
+    pub id_key: [u8; 16],
+    pub jwt: JwtConfig,
     pub hasher: HasherConfig,
 }
 
-#[serde_as]
 #[derive(Clone, Debug, Deserialize)]
 pub struct HttpConfig {
     pub host: [u8; 4],
@@ -52,6 +55,14 @@ pub struct HasherConfig {
     pub secret: Secret<String>,
     #[serde(flatten, deserialize_with = "deserialize_argon2_params")]
     pub params: Params,
+}
+
+#[serde_as]
+#[derive(Clone, Debug, Deserialize)]
+pub struct JwtConfig {
+    pub secret: Secret<String>,
+    #[serde_as(as = "DurationSeconds<u64>")]
+    pub access_ttl: Duration,
 }
 
 impl Config {

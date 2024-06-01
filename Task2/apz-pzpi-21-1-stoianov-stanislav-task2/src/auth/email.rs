@@ -1,4 +1,4 @@
-use crate::error::Error;
+use crate::Error;
 
 pub type UnvalidatedEmail = String;
 

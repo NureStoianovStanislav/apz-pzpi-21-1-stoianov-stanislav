@@ -9,7 +9,6 @@ pub fn init() {
         .init()
 }
 
-#[allow(unused)]
 pub(crate) async fn instrument_blocking<F, R>(f: F) -> anyhow::Result<R>
 where
     F: FnOnce() -> R + Send + 'static,
