@@ -1,6 +1,6 @@
 use crate::{database::Database, state::AppState, Error};
 
-use super::{email::Email, name::Name, UpdateUser, User, UserId};
+use super::{email::Email, name::Name, role::Role, UpdateUser, User, UserId};
 
 #[derive(Clone, Debug, sqlx::FromRow)]
 struct UserInfo {
@@ -17,7 +17,12 @@ struct UpdateUserInfo {
 #[tracing::instrument(skip(state))]
 pub async fn get_user(user_id: UserId, state: AppState) -> crate::Result<User> {
     let db_id = user_id.sql_id(&state.id_cipher)?;
-    let user_info = get_user_info(db_id, &state.database).await?;
+    let user_info = get_user_info(db_id, &state.database)
+        .await
+        .and_then(|user| {
+            user.ok_or(Error::NotFound)
+                .inspect_err(|e| tracing::debug!("{e:?}"))
+        })?;
     Ok(User {
         id: user_id,
         name: user_info.name,
@@ -38,8 +43,27 @@ pub async fn update_user(
     update_user_info(&user_info, &state.database).await
 }
 
-#[tracing::instrument(skip(db))]
-async fn get_user_info(user_id: i64, db: &Database) -> crate::Result<UserInfo> {
+#[tracing::instrument(skip(state))]
+pub async fn check_permission(
+    user_id: UserId,
+    state: &AppState,
+    has_permissions: fn(Role) -> bool,
+) -> crate::Result<()> {
+    let db_id = user_id.sql_id(&state.id_cipher)?;
+    get_user_role(db_id, &state.database)
+        .await?
+        .ok_or(Error::LoggedOff)
+        .and_then(|role| {
+            if has_permissions(role) {
+                Ok(())
+            } else {
+                Err(Error::Unauthorized)
+            }
+        })
+}
+
+#[tracing::instrument(skip(db), err(Debug))]
+async fn get_user_info(user_id: i64, db: &Database) -> crate::Result<Option<UserInfo>> {
     sqlx::query_as(
         "
         select name, email 
@@ -51,11 +75,6 @@ async fn get_user_info(user_id: i64, db: &Database) -> crate::Result<UserInfo> {
     .fetch_optional(db)
     .await
     .map_err(Error::from)
-    .inspect_err(|e| tracing::error!("{e:?}"))
-    .and_then(|user| {
-        user.ok_or(Error::NotFound)
-            .inspect_err(|e| tracing::debug!("{e:?}"))
-    })
 }
 
 #[tracing::instrument(skip(db))]
@@ -71,6 +90,7 @@ async fn update_user_info(user_info: &UpdateUserInfo, db: &Database) -> crate::R
     .bind(user_info.id)
     .execute(db)
     .await
+    .map_err(Error::from)
     .inspect_err(|e| tracing::error!("{e:?}"))?
     .rows_affected()
     {
@@ -78,4 +98,20 @@ async fn update_user_info(user_info: &UpdateUserInfo, db: &Database) -> crate::R
         1 => Ok(()),
         _ => unreachable!(),
     }
+}
+
+#[tracing::instrument(skip(db), err(Debug))]
+async fn get_user_role(user_id: i64, db: &Database) -> crate::Result<Option<Role>> {
+    sqlx::query_as::<_, (_,)>(
+        "
+        select role
+        from users
+        where id = $1;
+        ",
+    )
+    .bind(user_id)
+    .fetch_optional(db)
+    .await
+    .map(|maybe| maybe.map(|role| role.0))
+    .map_err(Error::from)
 }

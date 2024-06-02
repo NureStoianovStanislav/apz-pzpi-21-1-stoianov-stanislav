@@ -8,5 +8,6 @@ mod error;
 mod id;
 
 mod auth;
+mod libraries;
 
 use error::*;
