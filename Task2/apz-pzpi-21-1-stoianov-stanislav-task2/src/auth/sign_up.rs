@@ -9,16 +9,20 @@ use crate::{
 
 use super::{
     email::Email,
+    name::Name,
     password::{hash_password, Password, PasswordHash},
+    role::Role,
     token::RefreshSecret,
     Credentials,
 };
 
 #[derive(Clone, Debug, sqlx::Type, sqlx::FromRow)]
 struct NewUser {
+    name: Name,
     email: Email,
     password_hash: PasswordHash,
     refresh_secret: RefreshSecret,
+    role: Role,
 }
 
 #[tracing::instrument(skip(state))]
@@ -30,9 +34,11 @@ pub async fn sign_up(credentials: Credentials, state: AppState) -> crate::Result
             .await??;
     let refresh_secret = RefreshSecret::new();
     let user = NewUser {
+        name: Name::default(),
         email,
         password_hash,
         refresh_secret,
+        role: Role::Client,
     };
     save_user(&user, &state.database).await
 }
@@ -42,14 +48,16 @@ async fn save_user(user: &NewUser, db: &Database) -> crate::Result<()> {
     match sqlx::query(
         "
         insert into users
-          (name, email, password_hash, refresh_secret)
+          (name, email, password_hash, refresh_secret, role)
         values
-          ('', $1, $2, $3);
+          ($1, $2, $3, $4, $5);
         ",
     )
+    .bind(&user.name)
     .bind(&user.email)
     .bind(&user.password_hash)
     .bind(&user.refresh_secret)
+    .bind(user.role)
     .execute(db)
     .await
     {

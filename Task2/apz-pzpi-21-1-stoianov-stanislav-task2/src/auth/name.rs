@@ -4,7 +4,7 @@ use crate::Error;
 
 pub type UnvalidatedName = String;
 
-#[derive(Clone, Debug, sqlx::Type, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, sqlx::Type, Serialize, Deserialize)]
 #[sqlx(transparent)]
 #[serde(transparent)]
 pub struct Name(UnvalidatedName);

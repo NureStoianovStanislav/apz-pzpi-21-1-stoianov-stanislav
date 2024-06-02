@@ -3,5 +3,7 @@ create table users(
     name varchar(50) not null,
     email varchar(50) not null unique,
     password_hash text not null,
-    refresh_secret uuid not null unique
+    refresh_secret uuid not null unique,
+    role varchar(32) not null
+     check(role in ('administrator', 'client'))
 );
