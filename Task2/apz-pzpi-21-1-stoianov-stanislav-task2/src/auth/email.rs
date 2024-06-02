@@ -1,9 +1,12 @@
+use serde::{Deserialize, Serialize};
+
 use crate::Error;
 
 pub type UnvalidatedEmail = String;
 
-#[derive(Clone, Debug, sqlx::Type)]
+#[derive(Clone, Debug, sqlx::Type, Serialize, Deserialize)]
 #[sqlx(transparent)]
+#[serde(transparent)]
 pub struct Email(UnvalidatedEmail);
 
 impl Email {

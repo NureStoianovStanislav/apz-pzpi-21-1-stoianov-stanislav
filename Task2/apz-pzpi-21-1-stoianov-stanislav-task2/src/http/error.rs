@@ -5,6 +5,7 @@ use axum::{
 };
 
 #[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 struct ErrorMessage {
     error: String,
 }
@@ -17,6 +18,7 @@ impl IntoResponse for crate::Error {
             Error::AccountExists => StatusCode::CONFLICT,
             Error::LoggedOff => StatusCode::UNAUTHORIZED,
             Error::InvalidCredentials => StatusCode::UNAUTHORIZED,
+            Error::NotFound => StatusCode::NOT_FOUND,
             Error::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
         };
         let message = ErrorMessage {

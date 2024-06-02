@@ -3,13 +3,13 @@ use axum::{
     extract::{FromRequestParts, State},
     http::{request::Parts, StatusCode},
     response::{IntoResponse, Response},
-    routing::post,
-    Form, Router,
+    routing::{get, post, put},
+    Form, Json, Router,
 };
 use axum_extra::extract::{cookie::Cookie, CookieJar};
 
 use crate::{
-    auth::{parse_access_token, sign_in, sign_up, TokenPair, UserId},
+    auth::{get_user, parse_access_token, sign_in, sign_up, update_user, TokenPair, UserId},
     state::AppState,
     Error,
 };
@@ -33,9 +33,11 @@ pub fn router() -> Router<AppState> {
         )
         .route(
             "/me",
-            axum::routing::get(|id: UserId, State(state): State<AppState>| async move {
-                axum::Json(id.sql_id(&state.id_cipher).map_err(|e| e.to_string()))
-            }),
+            get(|id: UserId, State(state)| async move { get_user(id, state).await.map(Json) }),
+        )
+        .route(
+            "/me",
+            put(|id: UserId, State(state), Json(user_info)| update_user(id, user_info, state)),
         )
 }
 
