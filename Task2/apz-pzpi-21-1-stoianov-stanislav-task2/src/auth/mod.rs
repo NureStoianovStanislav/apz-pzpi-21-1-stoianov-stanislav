@@ -1,6 +1,7 @@
 mod email;
 mod name;
 mod password;
+mod role;
 mod sign_in;
 mod sign_up;
 mod token;
