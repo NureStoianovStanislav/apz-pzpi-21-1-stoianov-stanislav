@@ -23,7 +23,7 @@ strum_macros = "0.26.2"
 
 aes = "0.8.4"
 secrecy = { version = "0.8.0", features = ["serde"] }
-uuid = { version = "1.8.0", features = ["v4"] }
+uuid = { version = "1.8.0", features = ["v4", "serde"] }
 argon2 = { version = "0.5.3", features = ["std", "zeroize"] }
 jsonwebtoken = "9.3.0"
 

@@ -43,7 +43,7 @@ fn validate_password(password: &str) -> Result<(), &'static str> {
 
 #[tracing::instrument(skip_all, err(Debug))]
 pub fn hash_password(password: &Password, config: HasherConfig) -> crate::Result<PasswordHash> {
-    let hasher = hasher(config.secret.expose_secret().as_bytes(), config.params)?;
+    let hasher = hasher(config.key.expose_secret().as_bytes(), config.params)?;
     let password = password.0.expose_secret().as_bytes();
     hash_bytes(hasher, password)
 }
@@ -54,7 +54,7 @@ pub fn verify_password(
     hash: Option<&PasswordHash>,
     config: HasherConfig,
 ) -> crate::Result<()> {
-    let hasher = hasher(config.secret.expose_secret().as_bytes(), config.params)?;
+    let hasher = hasher(config.key.expose_secret().as_bytes(), config.params)?;
     let password = password.expose_secret().as_bytes();
     match hash {
         Some(hash) => {
