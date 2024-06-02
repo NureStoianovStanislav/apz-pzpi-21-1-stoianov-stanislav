@@ -52,7 +52,7 @@ pub struct DatabaseConfig {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct HasherConfig {
-    pub secret: Secret<String>,
+    pub key: Secret<String>,
     #[serde(flatten, deserialize_with = "deserialize_argon2_params")]
     pub params: Params,
 }
@@ -60,9 +60,11 @@ pub struct HasherConfig {
 #[serde_as]
 #[derive(Clone, Debug, Deserialize)]
 pub struct JwtConfig {
-    pub secret: Secret<String>,
+    pub key: Secret<String>,
     #[serde_as(as = "DurationSeconds<u64>")]
     pub access_ttl: Duration,
+    #[serde_as(as = "DurationSeconds<u64>")]
+    pub refresh_ttl: Duration,
 }
 
 impl Config {

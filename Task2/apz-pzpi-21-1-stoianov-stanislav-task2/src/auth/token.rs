@@ -3,7 +3,7 @@ use core::fmt;
 use anyhow::Context;
 use jsonwebtoken::{get_current_timestamp, DecodingKey, EncodingKey, Header, Validation};
 use secrecy::ExposeSecret;
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::config::JwtConfig;
@@ -14,8 +14,9 @@ pub type AccessToken = String;
 
 pub type RefreshToken = String;
 
-#[derive(Clone, sqlx::Type)]
+#[derive(Clone, sqlx::Type, Serialize, Deserialize)]
 #[sqlx(transparent)]
+#[serde(transparent)]
 pub struct RefreshSecret(Uuid);
 
 impl RefreshSecret {
@@ -32,6 +33,14 @@ pub struct AccessClaims {
     id: UserId,
 }
 
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RefreshClaims {
+    iat: u64,
+    exp: u64,
+    secret: RefreshSecret,
+}
+
 #[tracing::instrument(skip(config), err(Debug))]
 pub fn create_access_token(id: UserId, config: &JwtConfig) -> crate::Result<AccessToken> {
     let now = get_current_timestamp();
@@ -40,31 +49,50 @@ pub fn create_access_token(id: UserId, config: &JwtConfig) -> crate::Result<Acce
         exp: now + config.access_ttl.as_secs(),
         id,
     };
-    jsonwebtoken::encode(
-        &Header::default(),
-        &claims,
-        &EncodingKey::from_secret(config.secret.expose_secret().as_bytes()),
-    )
-    .context("create access token")
-    .map_err(crate::Error::from)
+    encode_claims(&claims, config)
 }
 
 pub fn create_refresh_token(
     secret: RefreshSecret,
-    _config: &JwtConfig,
+    config: &JwtConfig,
 ) -> crate::Result<RefreshToken> {
-    // TODO jwt
-    Ok(secret.0.to_string())
+    let now = get_current_timestamp();
+    let claims = RefreshClaims {
+        iat: now,
+        exp: now + config.refresh_ttl.as_secs(),
+        secret,
+    };
+    encode_claims(&claims, config)
 }
 
 pub fn parse_access_token(token: &str, config: &JwtConfig) -> crate::Result<UserId> {
-    jsonwebtoken::decode::<AccessClaims>(
+    parse_claims::<AccessClaims>(token, config).map(|claims| claims.id)
+}
+
+#[allow(unused)]
+pub fn parse_refresh_token(token: &str, config: &JwtConfig) -> crate::Result<RefreshSecret> {
+    parse_claims::<RefreshClaims>(token, config).map(|claims| claims.secret)
+}
+
+
+fn encode_claims<C: Serialize>(claims: &C, config: &JwtConfig) -> crate::Result<String> {
+    jsonwebtoken::encode(
+        &Header::default(),
+        &claims,
+        &EncodingKey::from_secret(config.key.expose_secret().as_bytes()),
+    )
+    .context("encode jwt")
+    .map_err(crate::Error::from)
+}
+
+fn parse_claims<C: DeserializeOwned>(token: &str, config: &JwtConfig) -> crate::Result<C> {
+    jsonwebtoken::decode(
         token,
-        &DecodingKey::from_secret(config.secret.expose_secret().as_bytes()),
+        &DecodingKey::from_secret(config.key.expose_secret().as_bytes()),
         &Validation::default(),
     )
-    .map(|token| token.claims.id)
-    .context("decode jwt token")
+    .map(|token| token.claims)
+    .context("decode jwt")
     .map_err(crate::Error::from)
 }
 

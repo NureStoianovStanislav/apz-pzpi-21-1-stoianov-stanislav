@@ -13,12 +13,13 @@ database:
 id_key: "quuxquuxquuxquux"
 
 hasher:
-  secret: ""
+  key: ""
   memory_size: 16
   iterations: 1
   parallelism_factor: 1
   output_length: 32
 
 jwt:
-  secret: ""
+  key: ""
   access_ttl: 900
+  refresh_ttl: 2678400
