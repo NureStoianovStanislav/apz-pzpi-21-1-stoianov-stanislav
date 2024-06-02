@@ -1,5 +1,6 @@
 mod auth;
 mod error;
+mod libraries;
 
 use std::net::SocketAddr;
 
@@ -19,5 +20,7 @@ pub async fn serve(config: HttpConfig, state: AppState) -> anyhow::Result<()> {
 }
 
 fn router() -> Router<AppState> {
-    Router::new().nest("/auth", auth::router())
+    Router::new()
+        .nest("/auth", auth::router())
+        .nest("/libraries", libraries::router())
 }

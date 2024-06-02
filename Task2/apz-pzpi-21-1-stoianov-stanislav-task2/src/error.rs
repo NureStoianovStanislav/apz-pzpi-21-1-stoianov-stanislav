@@ -16,6 +16,8 @@ pub enum Error {
     InvalidCredentials,
     #[error("requested resource not found")]
     NotFound,
+    #[error("no permission for the resourse")]
+    Unauthorized,
     #[error("an unexpected error occurred")]
     Internal(#[from] ErrorChain),
 }

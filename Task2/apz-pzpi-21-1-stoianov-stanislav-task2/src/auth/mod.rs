@@ -2,15 +2,17 @@ mod email;
 mod name;
 mod password;
 mod role;
+mod token;
+
 mod sign_in;
 mod sign_up;
-mod token;
 mod user;
 
 pub use sign_in::sign_in;
 pub use sign_up::sign_up;
 pub use token::parse_access_token;
-pub use user::{get_user, update_user};
+pub use user::{get_user, update_user, check_permission};
+pub use role::Role;
 
 use serde::{Deserialize, Serialize};
 

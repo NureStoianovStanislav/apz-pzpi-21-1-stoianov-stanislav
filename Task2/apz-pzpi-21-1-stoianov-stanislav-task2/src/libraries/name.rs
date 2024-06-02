@@ -18,11 +18,3 @@ impl Name {
         }
     }
 }
-
-impl TryFrom<UnvalidatedName> for Name {
-    type Error = Error;
-
-    fn try_from(value: UnvalidatedName) -> Result<Self, Self::Error> {
-        Self::new(value)
-    }
-}
