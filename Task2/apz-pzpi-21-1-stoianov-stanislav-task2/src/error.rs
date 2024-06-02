@@ -1,5 +1,7 @@
 use core::fmt;
 
+use crate::id;
+
 pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, thiserror::Error)]
@@ -12,6 +14,8 @@ pub enum Error {
     LoggedOff,
     #[error("wrong email or password")]
     InvalidCredentials,
+    #[error("requested resource not found")]
+    NotFound,
     #[error("an unexpected error occurred")]
     Internal(#[from] ErrorChain),
 }
@@ -25,6 +29,12 @@ impl From<anyhow::Error> for Error {
 impl From<sqlx::Error> for Error {
     fn from(error: sqlx::Error) -> Self {
         anyhow::Error::from(error).context("execute sql").into()
+    }
+}
+
+impl From<id::DecodeError> for Error {
+    fn from(value: id::DecodeError) -> Self {
+        anyhow::Error::from(value).context("parse id").into()
     }
 }
 

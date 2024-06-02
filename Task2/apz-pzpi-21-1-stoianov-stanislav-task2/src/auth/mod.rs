@@ -1,19 +1,23 @@
 mod email;
+mod name;
 mod password;
 mod sign_in;
 mod sign_up;
 mod token;
+mod user;
 
 pub use sign_in::sign_in;
 pub use sign_up::sign_up;
 pub use token::parse_access_token;
+pub use user::{get_user, update_user};
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::id::{tag, Id};
 
 use self::{
-    email::UnvalidatedEmail,
+    email::{Email, UnvalidatedEmail},
+    name::{Name, UnvalidatedName},
     password::UnvalidatedPassword,
     token::{AccessToken, RefreshToken},
 };
@@ -21,9 +25,24 @@ use self::{
 pub type UserId = Id<{ tag("user") }>;
 
 #[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Credentials {
     pub email: UnvalidatedEmail,
     pub password: UnvalidatedPassword,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct User {
+    pub id: UserId,
+    pub name: Name,
+    pub email: Email,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateUser {
+    pub name: UnvalidatedName,
 }
 
 #[derive(Clone, Debug)]

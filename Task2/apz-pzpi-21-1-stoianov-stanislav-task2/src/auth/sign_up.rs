@@ -42,9 +42,9 @@ async fn save_user(user: &NewUser, db: &Database) -> crate::Result<()> {
     match sqlx::query(
         "
         insert into users
-          (email, password_hash, refresh_secret)
+          (name, email, password_hash, refresh_secret)
         values
-          ($1, $2, $3);
+          ('', $1, $2, $3);
         ",
     )
     .bind(&user.email)
