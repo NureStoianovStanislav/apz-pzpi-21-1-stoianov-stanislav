@@ -1,4 +1,4 @@
-use crate::{database::Database, state::AppState, Error};
+use crate::{database::Database, state::AppState, telemetry, Error};
 
 use super::{address::Address, name::Name, Library, LibraryId};
 
@@ -21,14 +21,10 @@ pub async fn view_library(id: LibraryId, state: AppState) -> crate::Result<Libra
     let id = id
         .sql_id(&state.id_cipher)
         .map_err(|_| Error::NotFound)
-        .inspect_err(|e| tracing::debug!("{e:?}"))?;
+        .inspect_err(telemetry::debug)?;
     get_library(id, &state.database)
         .await
-        .and_then(|library| {
-            library
-                .ok_or(Error::NotFound)
-                .inspect_err(|e| tracing::debug!("{e:?}"))
-        })
+        .and_then(|library| library.ok_or(Error::NotFound).inspect_err(telemetry::debug))
         .map(|library| Library {
             id: LibraryId::new(library.id, &state.id_cipher),
             name: library.name,

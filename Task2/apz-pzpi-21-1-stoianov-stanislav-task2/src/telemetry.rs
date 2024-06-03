@@ -19,3 +19,11 @@ where
         .await
         .context("spawn blocking task")
 }
+
+pub fn debug(value: &impl std::fmt::Debug) {
+    tracing::debug!("{value:?}")
+}
+
+pub fn error(value: &impl std::fmt::Debug) {
+    tracing::error!("{value:?}")
+}

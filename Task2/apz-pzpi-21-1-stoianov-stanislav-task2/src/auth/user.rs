@@ -1,4 +1,4 @@
-use crate::{database::Database, state::AppState, Error};
+use crate::{database::Database, state::AppState, telemetry, Error};
 
 use super::{email::Email, name::Name, role::Role, UpdateUser, User, UserId};
 
@@ -19,13 +19,10 @@ pub async fn get_user(user_id: UserId, state: AppState) -> crate::Result<User> {
     let db_id = user_id
         .sql_id(&state.id_cipher)
         .map_err(|_| Error::NotFound)
-        .inspect_err(|e| tracing::debug!("{e:?}"))?;
+        .inspect_err(telemetry::debug)?;
     get_user_info(db_id, &state.database)
         .await
-        .and_then(|user| {
-            user.ok_or(Error::NotFound)
-                .inspect_err(|e| tracing::debug!("{e:?}"))
-        })
+        .and_then(|user| user.ok_or(Error::NotFound).inspect_err(telemetry::debug))
         .map(|user_info| User {
             id: user_id,
             name: user_info.name,
@@ -94,10 +91,10 @@ async fn update_user_info(user_info: &UpdateUserInfo, db: &Database) -> crate::R
     .execute(db)
     .await
     .map_err(Error::from)
-    .inspect_err(|e| tracing::error!("{e:?}"))?
+    .inspect_err(telemetry::error)?
     .rows_affected()
     {
-        0 => Err(Error::NotFound).inspect_err(|e| tracing::debug!("{e:?}")),
+        0 => Err(Error::NotFound).inspect_err(telemetry::debug),
         1 => Ok(()),
         _ => unreachable!(),
     }
