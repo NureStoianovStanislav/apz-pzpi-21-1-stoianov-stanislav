@@ -15,11 +15,13 @@ pub fn router() -> Router<AppState> {
     Router::new()
         .route(
             "/",
-            get(|State(state)| async { list_libraries(state).await.map(Json) }),
+            get(|State(state)| async move { list_libraries(state).await.map(Json) }),
         )
         .route(
             "/:id",
-            get(|Path(id), State(state)| async move { view_library(id, state).await.map(Json) }),
+            get(|Path(id), State(state)| async move {
+                view_library(id, state).await.map(Json)
+            }),
         )
         .route(
             "/",

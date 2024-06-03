@@ -1,7 +1,9 @@
 use core::fmt;
 
 use anyhow::Context;
-use jsonwebtoken::{get_current_timestamp, DecodingKey, EncodingKey, Header, Validation};
+use jsonwebtoken::{
+    get_current_timestamp, DecodingKey, EncodingKey, Header, Validation,
+};
 use secrecy::ExposeSecret;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use uuid::Uuid;
@@ -42,7 +44,10 @@ pub struct RefreshClaims {
 }
 
 #[tracing::instrument(skip(config), err(Debug))]
-pub fn create_access_token(id: UserId, config: &JwtConfig) -> crate::Result<AccessToken> {
+pub fn create_access_token(
+    id: UserId,
+    config: &JwtConfig,
+) -> crate::Result<AccessToken> {
     let now = get_current_timestamp();
     let claims = AccessClaims {
         iat: now,
@@ -65,16 +70,25 @@ pub fn create_refresh_token(
     encode_claims(&claims, config)
 }
 
-pub fn parse_access_token(token: &str, config: &JwtConfig) -> crate::Result<UserId> {
+pub fn parse_access_token(
+    token: &str,
+    config: &JwtConfig,
+) -> crate::Result<UserId> {
     parse_claims::<AccessClaims>(token, config).map(|claims| claims.id)
 }
 
 #[allow(unused)]
-pub fn parse_refresh_token(token: &str, config: &JwtConfig) -> crate::Result<RefreshSecret> {
+pub fn parse_refresh_token(
+    token: &str,
+    config: &JwtConfig,
+) -> crate::Result<RefreshSecret> {
     parse_claims::<RefreshClaims>(token, config).map(|claims| claims.secret)
 }
 
-fn encode_claims<C: Serialize>(claims: &C, config: &JwtConfig) -> crate::Result<String> {
+fn encode_claims<C: Serialize>(
+    claims: &C,
+    config: &JwtConfig,
+) -> crate::Result<String> {
     jsonwebtoken::encode(
         &Header::default(),
         &claims,
@@ -84,7 +98,10 @@ fn encode_claims<C: Serialize>(claims: &C, config: &JwtConfig) -> crate::Result<
     .map_err(crate::Error::from)
 }
 
-fn parse_claims<C: DeserializeOwned>(token: &str, config: &JwtConfig) -> crate::Result<C> {
+fn parse_claims<C: DeserializeOwned>(
+    token: &str,
+    config: &JwtConfig,
+) -> crate::Result<C> {
     jsonwebtoken::decode(
         token,
         &DecodingKey::from_secret(config.key.expose_secret().as_bytes()),

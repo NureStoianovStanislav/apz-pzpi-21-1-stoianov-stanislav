@@ -22,7 +22,9 @@ pub async fn get_user(user_id: UserId, state: AppState) -> crate::Result<User> {
         .inspect_err(telemetry::debug)?;
     get_user_info(db_id, &state.database)
         .await
-        .and_then(|user| user.ok_or(Error::NotFound).inspect_err(telemetry::debug))
+        .and_then(|user| {
+            user.ok_or(Error::NotFound).inspect_err(telemetry::debug)
+        })
         .map(|user_info| User {
             id: user_id,
             name: user_info.name,
@@ -63,7 +65,10 @@ pub async fn check_permission(
 }
 
 #[tracing::instrument(skip(db), err(Debug))]
-async fn get_user_info(user_id: i64, db: &Database) -> crate::Result<Option<UserInfo>> {
+async fn get_user_info(
+    user_id: i64,
+    db: &Database,
+) -> crate::Result<Option<UserInfo>> {
     sqlx::query_as(
         "
         select name, email 
@@ -78,7 +83,10 @@ async fn get_user_info(user_id: i64, db: &Database) -> crate::Result<Option<User
 }
 
 #[tracing::instrument(skip(db))]
-async fn update_user_info(user_info: &UpdateUserInfo, db: &Database) -> crate::Result<()> {
+async fn update_user_info(
+    user_info: &UpdateUserInfo,
+    db: &Database,
+) -> crate::Result<()> {
     match sqlx::query(
         "
         update users
@@ -101,7 +109,10 @@ async fn update_user_info(user_info: &UpdateUserInfo, db: &Database) -> crate::R
 }
 
 #[tracing::instrument(skip(db), err(Debug))]
-async fn get_user_role(user_id: i64, db: &Database) -> crate::Result<Option<Role>> {
+async fn get_user_role(
+    user_id: i64,
+    db: &Database,
+) -> crate::Result<Option<Role>> {
     sqlx::query_as::<_, (_,)>(
         "
         select role

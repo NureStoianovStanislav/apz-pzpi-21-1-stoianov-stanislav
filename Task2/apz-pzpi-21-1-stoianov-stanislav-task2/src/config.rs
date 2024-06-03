@@ -83,7 +83,9 @@ fn environment() -> anyhow::Result<Environment> {
     std::env::var("ENVIRONMENT")
         .context("ENVIRONMENT must be present")
         .map(|env| Environment::from_str(env.as_str()))?
-        .with_context(|| format!("environment must be one of: {:?}", Environment::VARIANTS))
+        .with_context(|| {
+            format!("environment must be one of: {:?}", Environment::VARIANTS)
+        })
 }
 
 fn config_path(environment: Environment) -> anyhow::Result<PathBuf> {
@@ -101,7 +103,9 @@ struct Argon2Params {
     pub output_length: Option<usize>,
 }
 
-fn deserialize_argon2_params<'de, D>(deserializer: D) -> Result<Params, D::Error>
+fn deserialize_argon2_params<'de, D>(
+    deserializer: D,
+) -> Result<Params, D::Error>
 where
     D: Deserializer<'de>,
 {
