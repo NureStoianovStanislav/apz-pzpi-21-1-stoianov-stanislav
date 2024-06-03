@@ -12,7 +12,10 @@ pub async fn add_library(
     library: NewLibrary,
     state: AppState,
 ) -> crate::Result<()> {
-    check_permission(admin_id, &state, |role| matches!(role, Role::Administrator)).await?;
+    check_permission(admin_id, &state, |role| {
+        matches!(role, Role::Administrator)
+    })
+    .await?;
     let library = CreateLibrary {
         owner_id: library.owner_id.sql_id(&state.id_cipher)?,
         name: Name::new(library.name)?,
@@ -28,7 +31,10 @@ pub struct CreateLibrary {
     pub address: Address,
 }
 
-async fn create_library(library: &CreateLibrary, db: &Database) -> crate::Result<()> {
+async fn create_library(
+    library: &CreateLibrary,
+    db: &Database,
+) -> crate::Result<()> {
     sqlx::query(
         "
         insert into libraries

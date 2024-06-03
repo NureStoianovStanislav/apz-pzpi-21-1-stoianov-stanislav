@@ -58,7 +58,11 @@ fn encrypt(tag: u64, id: i64, cipher: &Aes128) -> u128 {
     u128::from_le_bytes(bytes.into())
 }
 
-fn decrypt(expected_tag: u64, id: u128, cipher: &Aes128) -> Result<i64, DecodeError> {
+fn decrypt(
+    expected_tag: u64,
+    id: u128,
+    cipher: &Aes128,
+) -> Result<i64, DecodeError> {
     let mut bytes = id.to_le_bytes().into();
     cipher.decrypt_block(&mut bytes);
     match bisect(bytes.into()) {

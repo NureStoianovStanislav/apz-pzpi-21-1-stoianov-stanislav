@@ -2,7 +2,9 @@ use core::fmt;
 
 use anyhow::Context;
 use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHasher, PasswordVerifier, SaltString},
+    password_hash::{
+        rand_core::OsRng, PasswordHasher, PasswordVerifier, SaltString,
+    },
     Algorithm, Argon2, Params, Version,
 };
 use secrecy::{ExposeSecret, Secret};
@@ -36,13 +38,18 @@ fn validate_password(password: &str) -> Result<(), &'static str> {
         p if !p.chars().any(char::is_uppercase) => {
             Err("password must contain at least one uppercase character")
         }
-        p if !p.chars().any(char::is_numeric) => Err("password must contain at least one number"),
+        p if !p.chars().any(char::is_numeric) => {
+            Err("password must contain at least one number")
+        }
         _ => Ok(()),
     }
 }
 
 #[tracing::instrument(skip_all, err(Debug))]
-pub fn hash_password(password: &Password, config: HasherConfig) -> crate::Result<PasswordHash> {
+pub fn hash_password(
+    password: &Password,
+    config: HasherConfig,
+) -> crate::Result<PasswordHash> {
     let hasher = hasher(config.key.expose_secret().as_bytes(), config.params)?;
     let password = password.0.expose_secret().as_bytes();
     hash_bytes(hasher, password)
@@ -58,7 +65,8 @@ pub fn verify_password(
     let password = password.expose_secret().as_bytes();
     match hash {
         Some(hash) => {
-            let hash = argon2::PasswordHash::new(&hash.0).context("parse password hash")?;
+            let hash = argon2::PasswordHash::new(&hash.0)
+                .context("parse password hash")?;
             hasher
                 .verify_password(password, &hash)
                 .map_err(|_| Error::InvalidCredentials)
@@ -70,7 +78,10 @@ pub fn verify_password(
     }
 }
 
-fn hash_bytes(hasher: Argon2<'_>, password: &[u8]) -> crate::Result<PasswordHash> {
+fn hash_bytes(
+    hasher: Argon2<'_>,
+    password: &[u8],
+) -> crate::Result<PasswordHash> {
     hasher
         .hash_password(password, &SaltString::generate(&mut OsRng))
         .map(|hash| PasswordHash(hash.to_string()))
@@ -79,9 +90,14 @@ fn hash_bytes(hasher: Argon2<'_>, password: &[u8]) -> crate::Result<PasswordHash
 }
 
 fn hasher(secret: &[u8], params: Params) -> crate::Result<Argon2<'_>> {
-    Argon2::new_with_secret(secret, Algorithm::default(), Version::default(), params)
-        .context("instantiate hasher")
-        .map_err(crate::Error::from)
+    Argon2::new_with_secret(
+        secret,
+        Algorithm::default(),
+        Version::default(),
+        params,
+    )
+    .context("instantiate hasher")
+    .map_err(crate::Error::from)
 }
 
 impl TryFrom<UnvalidatedPassword> for Password {

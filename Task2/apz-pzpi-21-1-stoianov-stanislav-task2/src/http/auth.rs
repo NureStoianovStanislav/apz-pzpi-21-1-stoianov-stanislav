@@ -9,7 +9,10 @@ use axum::{
 use axum_extra::extract::{cookie::Cookie, CookieJar};
 
 use crate::{
-    auth::{get_user, parse_access_token, sign_in, sign_up, update_user, TokenPair, UserId},
+    auth::{
+        get_user, parse_access_token, sign_in, sign_up, update_user, TokenPair,
+        UserId,
+    },
     state::AppState,
     Error,
 };
@@ -21,7 +24,7 @@ pub fn router() -> Router<AppState> {
     Router::new()
         .route(
             "/sign-up",
-            post(|State(state), Form(credentials)| async {
+            post(|State(state), Form(credentials)| async move {
                 sign_up(credentials, state)
                     .await
                     .map(|_| StatusCode::CREATED)
@@ -33,11 +36,15 @@ pub fn router() -> Router<AppState> {
         )
         .route(
             "/me",
-            get(|id: UserId, State(state)| async move { get_user(id, state).await.map(Json) }),
+            get(|id: UserId, State(state)| async move {
+                get_user(id, state).await.map(Json)
+            }),
         )
         .route(
             "/me",
-            put(|id: UserId, State(state), Json(user_info)| update_user(id, user_info, state)),
+            put(|id: UserId, State(state), Json(user_info)| {
+                update_user(id, user_info, state)
+            }),
         )
 }
 
@@ -53,7 +60,8 @@ impl FromRequestParts<AppState> for UserId {
             .await
             .context("extract cookies")?;
         let cookie = cookies.get(ACCESS_TOKEN).ok_or(Error::LoggedOff)?;
-        parse_access_token(cookie.value(), &state.jwt_config).map_err(|_| Error::LoggedOff)
+        parse_access_token(cookie.value(), &state.jwt_config)
+            .map_err(|_| Error::LoggedOff)
     }
 }
 

@@ -26,7 +26,10 @@ struct NewUser {
 }
 
 #[tracing::instrument(skip(state))]
-pub async fn sign_up(credentials: Credentials, state: AppState) -> crate::Result<()> {
+pub async fn sign_up(
+    credentials: Credentials,
+    state: AppState,
+) -> crate::Result<()> {
     let email = Email::new(credentials.email)?;
     let password = Password::new(credentials.password)?;
     let password_hash = telemetry::instrument_blocking(move || {
