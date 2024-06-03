@@ -16,18 +16,21 @@ struct UpdateUserInfo {
 
 #[tracing::instrument(skip(state))]
 pub async fn get_user(user_id: UserId, state: AppState) -> crate::Result<User> {
-    let db_id = user_id.sql_id(&state.id_cipher)?;
-    let user_info = get_user_info(db_id, &state.database)
+    let db_id = user_id
+        .sql_id(&state.id_cipher)
+        .map_err(|_| Error::NotFound)
+        .inspect_err(|e| tracing::debug!("{e:?}"))?;
+    get_user_info(db_id, &state.database)
         .await
         .and_then(|user| {
             user.ok_or(Error::NotFound)
                 .inspect_err(|e| tracing::debug!("{e:?}"))
-        })?;
-    Ok(User {
-        id: user_id,
-        name: user_info.name,
-        email: user_info.email,
-    })
+        })
+        .map(|user_info| User {
+            id: user_id,
+            name: user_info.name,
+            email: user_info.email,
+        })
 }
 
 #[tracing::instrument(skip(state))]
