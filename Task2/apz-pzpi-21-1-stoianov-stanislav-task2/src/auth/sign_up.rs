@@ -4,7 +4,7 @@ use crate::{
     database::{error_kind, Database},
     error::Error,
     state::AppState,
-    telemetry::instrument_blocking,
+    telemetry,
 };
 
 use super::{
@@ -29,9 +29,10 @@ struct NewUser {
 pub async fn sign_up(credentials: Credentials, state: AppState) -> crate::Result<()> {
     let email = Email::new(credentials.email)?;
     let password = Password::new(credentials.password)?;
-    let password_hash =
-        instrument_blocking(move || hash_password(&password, (*state.hasher_config).clone()))
-            .await??;
+    let password_hash = telemetry::instrument_blocking(move || {
+        hash_password(&password, (*state.hasher_config).clone())
+    })
+    .await??;
     let refresh_secret = RefreshSecret::new();
     let user = NewUser {
         name: Name::default(),
@@ -62,11 +63,11 @@ async fn save_user(user: &NewUser, db: &Database) -> crate::Result<()> {
     .await
     {
         Err(e) if error_kind(&e) == Some(ErrorKind::UniqueViolation) => {
-            Err(Error::AccountExists).inspect_err(|e| tracing::debug!("{e:?}"))
+            Err(Error::AccountExists).inspect_err(telemetry::debug)
         }
         other => other
             .map(|_| ())
             .map_err(Error::from)
-            .inspect_err(|e| tracing::error!("{e:?}")),
+            .inspect_err(telemetry::error),
     }
 }

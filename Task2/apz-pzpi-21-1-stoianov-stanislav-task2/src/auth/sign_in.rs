@@ -1,4 +1,4 @@
-use crate::{database::Database, state::AppState, telemetry::instrument_blocking};
+use crate::{database::Database, state::AppState, telemetry};
 
 use super::{
     email::UnvalidatedEmail,
@@ -13,7 +13,7 @@ pub async fn sign_in(credentials: Credentials, state: AppState) -> crate::Result
         .await?
         .map(|u| ((u.id, u.refresh_secret), u.password_hash))
         .unzip();
-    instrument_blocking(move || {
+    telemetry::instrument_blocking(move || {
         verify_password(
             &credentials.password,
             hash.as_ref(),

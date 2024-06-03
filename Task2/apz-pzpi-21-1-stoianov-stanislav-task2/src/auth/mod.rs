@@ -8,11 +8,11 @@ mod sign_in;
 mod sign_up;
 mod user;
 
+pub use role::Role;
 pub use sign_in::sign_in;
 pub use sign_up::sign_up;
 pub use token::parse_access_token;
-pub use user::{get_user, update_user, check_permission};
-pub use role::Role;
+pub use user::{check_permission, get_user, update_user};
 
 use serde::{Deserialize, Serialize};
 

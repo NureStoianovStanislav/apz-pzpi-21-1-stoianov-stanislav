@@ -74,7 +74,6 @@ pub fn parse_refresh_token(token: &str, config: &JwtConfig) -> crate::Result<Ref
     parse_claims::<RefreshClaims>(token, config).map(|claims| claims.secret)
 }
 
-
 fn encode_claims<C: Serialize>(claims: &C, config: &JwtConfig) -> crate::Result<String> {
     jsonwebtoken::encode(
         &Header::default(),
