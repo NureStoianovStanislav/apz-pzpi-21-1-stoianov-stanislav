@@ -33,13 +33,13 @@ create table books(
 );
 
 create table lendings(
+    id bigserial primary key,
     book_id bigint not null
       references books(id)
       on delete cascade,
     lendee_id bigint not null
       references users(id)
       on delete cascade,
-    lent_on timestamptz not null,
-    due timestamptz not null,
-    primary key (book_id, lendee_id)
+    lent_on date not null,
+    due date not null
 );

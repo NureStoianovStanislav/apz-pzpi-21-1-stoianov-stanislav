@@ -9,7 +9,7 @@ mod id;
 
 mod auth;
 mod books;
-mod libraries;
 mod lendings;
+mod libraries;
 
 use error::*;

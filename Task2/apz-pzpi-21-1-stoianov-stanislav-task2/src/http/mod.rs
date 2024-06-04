@@ -1,7 +1,7 @@
 mod auth;
 mod error;
-mod libraries;
 mod lendings;
+mod libraries;
 
 use std::net::SocketAddr;
 
@@ -24,4 +24,5 @@ fn router() -> Router<AppState> {
     Router::new()
         .nest("/auth", auth::router())
         .nest("/libraries", libraries::router())
+        .nest("/lendings", lendings::router())
 }
