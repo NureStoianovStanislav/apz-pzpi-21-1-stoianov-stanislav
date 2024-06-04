@@ -1,5 +1,8 @@
 mod address;
+mod currency;
+mod daily_rate;
 mod name;
+mod overdue_rate;
 
 mod add;
 mod delete;
@@ -20,7 +23,10 @@ use crate::{
 
 use self::{
     address::{Address, UnvalidatedAddress},
+    currency::{Currency, UnvalidatedCurrency},
+    daily_rate::{DailyRate, UnvalidatedDailyRate},
     name::{Name, UnvalidatedName},
+    overdue_rate::{OverdueRate, UnvalidatedOverdueRate},
 };
 
 pub type LibraryId = Id<{ tag("library") }>;
@@ -31,6 +37,9 @@ pub struct NewLibrary {
     pub owner_id: UserId,
     pub name: UnvalidatedName,
     pub address: UnvalidatedAddress,
+    pub daily_rate: UnvalidatedDailyRate,
+    pub overdue_rate: UnvalidatedOverdueRate,
+    pub currency: UnvalidatedCurrency,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -39,6 +48,9 @@ pub struct Library {
     pub id: LibraryId,
     pub name: Name,
     pub address: Address,
+    pub daily_rate: DailyRate,
+    pub overdue_rate: OverdueRate,
+    pub currency: Currency,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -47,4 +59,7 @@ pub struct UpdateLibrary {
     pub owner_id: UserId,
     pub name: UnvalidatedName,
     pub address: UnvalidatedAddress,
+    pub daily_rate: UnvalidatedDailyRate,
+    pub overdue_rate: UnvalidatedOverdueRate,
+    pub currency: UnvalidatedCurrency,
 }

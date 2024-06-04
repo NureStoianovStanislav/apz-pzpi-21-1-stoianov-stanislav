@@ -12,6 +12,10 @@ create table libraries(
     id bigserial primary key,
     name varchar(50) not null,
     address varchar(100) not null,
+    daily_rate numeric(10, 2) not null,
+    overdue_rate numeric(10, 5) not null,
+    currency VARCHAR(3) not null,
+      check(currency in ('UAH', 'USD', 'EUR')),
     owner_id bigint not null
       references users(id)
       on delete cascade
@@ -26,4 +30,16 @@ create table books(
     library_id bigint not null
       references libraries(id)
       on delete cascade
+);
+
+create table lendings(
+    book_id bigint not null
+      references books(id)
+      on delete cascade,
+    lendee_id bigint not null
+      references users(id)
+      on delete cascade,
+    lent_on timestamptz not null,
+    due timestamptz not null,
+    primary key (book_id, lendee_id)
 );
