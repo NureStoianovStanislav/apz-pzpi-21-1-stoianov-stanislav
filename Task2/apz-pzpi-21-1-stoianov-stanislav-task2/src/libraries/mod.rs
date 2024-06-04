@@ -2,9 +2,13 @@ mod address;
 mod name;
 
 mod add;
+mod delete;
+mod update;
 mod view;
 
 pub use add::add_library;
+pub use delete::delete_library;
+pub use update::update_library;
 pub use view::{list_libraries, view_library};
 
 use serde::{Deserialize, Serialize};
@@ -35,4 +39,12 @@ pub struct Library {
     pub id: LibraryId,
     pub name: Name,
     pub address: Address,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateLibrary {
+    pub owner_id: UserId,
+    pub name: UnvalidatedName,
+    pub address: UnvalidatedAddress,
 }
