@@ -10,5 +10,6 @@ mod id;
 mod auth;
 mod books;
 mod libraries;
+mod lendings;
 
 use error::*;

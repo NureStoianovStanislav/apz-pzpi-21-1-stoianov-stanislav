@@ -2,7 +2,10 @@ use crate::{
     auth::UserId, database::Database, state::AppState, telemetry, Error,
 };
 
-use super::{address::Address, name::Name, Library, LibraryId};
+use super::{
+    address::Address, currency::Currency, daily_rate::DailyRate, name::Name,
+    overdue_rate::OverdueRate, Library, LibraryId,
+};
 
 #[tracing::instrument(skip(state))]
 pub async fn list_libraries(state: AppState) -> crate::Result<Vec<Library>> {
@@ -13,6 +16,9 @@ pub async fn list_libraries(state: AppState) -> crate::Result<Vec<Library>> {
                 id: LibraryId::new(library.id, &state.id_cipher),
                 name: library.name,
                 address: library.address,
+                daily_rate: library.daily_rate,
+                overdue_rate: library.overdue_rate,
+                currency: library.currency,
             })
             .collect()
     })
@@ -36,6 +42,9 @@ pub async fn list_my_libraries(
                     id: LibraryId::new(library.id, &state.id_cipher),
                     name: library.name,
                     address: library.address,
+                    daily_rate: library.daily_rate,
+                    overdue_rate: library.overdue_rate,
+                    currency: library.currency,
                 })
                 .collect()
         })
@@ -59,6 +68,9 @@ pub async fn view_library(
             id: LibraryId::new(library.id, &state.id_cipher),
             name: library.name,
             address: library.address,
+            daily_rate: library.daily_rate,
+            overdue_rate: library.overdue_rate,
+            currency: library.currency,
         })
 }
 
@@ -67,13 +79,16 @@ struct DbLibrary {
     id: i64,
     name: Name,
     address: Address,
+    daily_rate: DailyRate,
+    overdue_rate: OverdueRate,
+    currency: Currency,
 }
 
 #[tracing::instrument(skip(db), err(Debug))]
 async fn get_all_libraries(db: &Database) -> crate::Result<Vec<DbLibrary>> {
     sqlx::query_as(
         "
-        select id, name, address
+        select id, name, address, daily_rate, overdue_rate, currency
         from libraries;
         ",
     )
@@ -89,7 +104,7 @@ async fn get_user_libraries(
 ) -> crate::Result<Vec<DbLibrary>> {
     sqlx::query_as(
         "
-        select id, name, address
+        select id, name, address, daily_rate, overdue_rate, currency
         from libraries
         where owner_id = $1;
         ",
@@ -107,7 +122,7 @@ async fn get_library(
 ) -> crate::Result<Option<DbLibrary>> {
     sqlx::query_as(
         "
-        select id, name, address
+        select id, name, address, daily_rate, overdue_rate, currency
         from libraries
         where id = $1;
         ",

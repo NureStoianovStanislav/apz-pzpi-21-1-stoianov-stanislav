@@ -1,6 +1,7 @@
 mod auth;
 mod error;
 mod libraries;
+mod lendings;
 
 use std::net::SocketAddr;
 
