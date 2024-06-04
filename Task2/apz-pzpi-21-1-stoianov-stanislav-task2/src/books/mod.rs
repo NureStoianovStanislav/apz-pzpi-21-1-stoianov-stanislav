@@ -1,12 +1,15 @@
 mod author;
 mod genre;
 mod name;
+mod owner;
 mod year;
 
 mod add;
+mod update;
 mod view;
 
 pub use add::add_book;
+pub use update::update_book;
 pub use view::{list_library_books, view_book};
 
 use serde::{Deserialize, Serialize};
@@ -39,4 +42,13 @@ pub struct Book {
     pub name: Name,
     pub genre: Genre,
     pub author: Author,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateBook {
+    pub year: UnvalidatedYear,
+    pub name: UnvalidatedName,
+    pub genre: UnvalidatedGenre,
+    pub author: UnvalidatedAuthor,
 }

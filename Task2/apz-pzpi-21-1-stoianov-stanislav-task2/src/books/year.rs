@@ -9,7 +9,6 @@ pub type UnvalidatedYear = i16;
 #[serde(transparent)]
 pub struct Year(UnvalidatedYear);
 
-
 impl Year {
     pub fn new(year: UnvalidatedYear) -> crate::Result<Self> {
         if year > 2024 {

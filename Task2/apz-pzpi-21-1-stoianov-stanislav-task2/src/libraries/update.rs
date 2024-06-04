@@ -2,6 +2,7 @@ use crate::{
     auth::{check_permission, Role, UserId},
     database::Database,
     state::AppState,
+    telemetry, Error,
 };
 
 use super::{address::Address, name::Name, LibraryId, UpdateLibrary};
@@ -16,10 +17,20 @@ pub async fn update_library(
     check_permission(admin_id, &state, |role| {
         matches!(role, Role::Administrator)
     })
-    .await?;
+    .await
+    .inspect_err(telemetry::debug)?;
+    let library_id = library_id
+        .sql_id(&state.id_cipher)
+        .map_err(|_| Error::NotFound)
+        .inspect_err(telemetry::debug)?;
+    let owner_id = library
+        .owner_id
+        .sql_id(&state.id_cipher)
+        .map_err(|_| Error::NotFound)
+        .inspect_err(telemetry::debug)?;
     let library = DbLibrary {
-        id: library_id.sql_id(&state.id_cipher)?,
-        owner_id: library.owner_id.sql_id(&state.id_cipher)?,
+        id: library_id,
+        owner_id,
         name: Name::new(library.name)?,
         address: Address::new(library.address)?,
     };
@@ -34,12 +45,12 @@ struct DbLibrary {
     address: Address,
 }
 
-#[tracing::instrument(skip(db), err(Debug))]
+#[tracing::instrument(skip(db))]
 async fn update_db_library(
     library: &DbLibrary,
     db: &Database,
 ) -> crate::Result<()> {
-    sqlx::query(
+    match sqlx::query(
         "
         update libraries
         set (name, address, owner_id)
@@ -53,6 +64,13 @@ async fn update_db_library(
     .bind(library.id)
     .execute(db)
     .await
-    .map(|_| ())
-    .map_err(crate::Error::from)
+    .map_err(Error::from)
+    .inspect_err(telemetry::error)?
+    .rows_affected()
+    {
+        0 => Err(Error::NotFound),
+        1 => Ok(()),
+        _ => unreachable!(),
+    }
+    .inspect_err(telemetry::debug)
 }

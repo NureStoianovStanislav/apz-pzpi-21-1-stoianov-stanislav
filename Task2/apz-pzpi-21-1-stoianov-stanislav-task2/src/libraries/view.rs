@@ -23,7 +23,10 @@ pub async fn list_my_libraries(
     user_id: UserId,
     state: AppState,
 ) -> crate::Result<Vec<Library>> {
-    let user_id = user_id.sql_id(&state.id_cipher)?;
+    let user_id = user_id
+        .sql_id(&state.id_cipher)
+        .map_err(|_| Error::LoggedOff)
+        .inspect_err(telemetry::debug)?;
     get_user_libraries(user_id, &state.database)
         .await
         .map(|libraries| {
