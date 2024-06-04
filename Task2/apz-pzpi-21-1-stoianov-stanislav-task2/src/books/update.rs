@@ -5,14 +5,15 @@ use crate::{
 
 use super::{
     author::Author, genre::Genre, name::Name, owner::check_owns, year::Year,
-    NewBook,
+    BookId, UpdateBook,
 };
 
 #[tracing::instrument(skip(state))]
-pub async fn add_book(
+pub async fn update_book(
     owner_id: UserId,
     library_id: LibraryId,
-    book: NewBook,
+    book_id: BookId,
+    book: UpdateBook,
     state: AppState,
 ) -> crate::Result<()> {
     let owner_id = owner_id
@@ -24,42 +25,53 @@ pub async fn add_book(
         .map_err(|_| Error::NotFound)
         .inspect_err(telemetry::debug)?;
     check_owns(owner_id, library_id, &state.database).await?;
+    let book_id = book_id
+        .sql_id(&state.id_cipher)
+        .map_err(|_| Error::NotFound)
+        .inspect_err(telemetry::debug)?;
     let book = DbBook {
-        library_id,
+        id: book_id,
         year: Year::new(book.year)?,
         name: Name::new(book.name)?,
         genre: Genre::new(book.genre)?,
         author: Author::new(book.author)?,
     };
-    insert_book(book, &state.database).await
+    update_db_book(book, &state.database).await
 }
 
 #[derive(Clone, Debug)]
 struct DbBook {
-    library_id: i64,
+    id: i64,
     year: Year,
     name: Name,
     genre: Genre,
     author: Author,
 }
 
-#[tracing::instrument(skip(db), err(Debug))]
-async fn insert_book(book: DbBook, db: &Database) -> crate::Result<()> {
-    sqlx::query(
+#[tracing::instrument(skip(db))]
+async fn update_db_book(book: DbBook, db: &Database) -> crate::Result<()> {
+    match sqlx::query(
         "
-        insert into books
-          (year, name, genre, author, library_id)
-        values
-          ($1, $2, $3, $4, $5);
+        update books
+        set (year, name, genre, author)
+          = ($1, $2, $3, $4)
+        where id = $5;
         ",
     )
     .bind(&book.year)
     .bind(&book.name)
     .bind(&book.genre)
     .bind(&book.author)
-    .bind(book.library_id)
+    .bind(book.id)
     .execute(db)
     .await
-    .map(|_| ())
     .map_err(Error::from)
+    .inspect_err(telemetry::error)?
+    .rows_affected()
+    {
+        0 => Err(Error::NotFound),
+        1 => Ok(()),
+        _ => unreachable!(),
+    }
+    .inspect_err(telemetry::debug)
 }

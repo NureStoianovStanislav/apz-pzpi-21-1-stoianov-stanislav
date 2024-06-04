@@ -12,7 +12,7 @@ pub struct Name(UnvalidatedName);
 impl Name {
     pub fn new(name: UnvalidatedName) -> crate::Result<Self> {
         if name.len() > 50 {
-            Err(Error::Validation("name is too long")) 
+            Err(Error::Validation("name is too long"))
         } else {
             Ok(Self(name))
         }
