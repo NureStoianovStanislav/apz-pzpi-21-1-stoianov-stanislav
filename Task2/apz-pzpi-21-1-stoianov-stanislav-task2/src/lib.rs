@@ -8,6 +8,7 @@ mod error;
 mod id;
 
 mod auth;
+mod books;
 mod libraries;
 
 use error::*;

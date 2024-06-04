@@ -9,7 +9,7 @@ mod view;
 pub use add::add_library;
 pub use delete::delete_library;
 pub use update::update_library;
-pub use view::{list_libraries, view_library};
+pub use view::{list_libraries, list_my_libraries, view_library};
 
 use serde::{Deserialize, Serialize};
 

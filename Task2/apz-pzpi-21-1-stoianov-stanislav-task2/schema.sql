@@ -16,3 +16,14 @@ create table libraries(
       references users(id)
       on delete cascade
 );
+
+create table books(
+    id bigserial primary key,
+    year smallint not null,
+    name varchar(50) not null,
+    genre varchar(50) not null,
+    author varchar(50) not null,
+    library_id bigint not null
+      references libraries(id)
+      on delete cascade
+);

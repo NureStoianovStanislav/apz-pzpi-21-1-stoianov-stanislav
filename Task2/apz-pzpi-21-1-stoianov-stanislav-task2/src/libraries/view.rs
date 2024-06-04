@@ -1,4 +1,6 @@
-use crate::{database::Database, state::AppState, telemetry, Error};
+use crate::{
+    auth::UserId, database::Database, state::AppState, telemetry, Error,
+};
 
 use super::{address::Address, name::Name, Library, LibraryId};
 
@@ -14,6 +16,26 @@ pub async fn list_libraries(state: AppState) -> crate::Result<Vec<Library>> {
             })
             .collect()
     })
+}
+
+#[tracing::instrument(skip(state))]
+pub async fn list_my_libraries(
+    user_id: UserId,
+    state: AppState,
+) -> crate::Result<Vec<Library>> {
+    let user_id = user_id.sql_id(&state.id_cipher)?;
+    get_user_libraries(user_id, &state.database)
+        .await
+        .map(|libraries| {
+            libraries
+                .into_iter()
+                .map(|library| Library {
+                    id: LibraryId::new(library.id, &state.id_cipher),
+                    name: library.name,
+                    address: library.address,
+                })
+                .collect()
+        })
 }
 
 #[tracing::instrument(skip(state))]
@@ -52,6 +74,24 @@ async fn get_all_libraries(db: &Database) -> crate::Result<Vec<DbLibrary>> {
         from libraries;
         ",
     )
+    .fetch_all(db)
+    .await
+    .map_err(crate::Error::from)
+}
+
+#[tracing::instrument(skip(db), err(Debug))]
+async fn get_user_libraries(
+    user_id: i64,
+    db: &Database,
+) -> crate::Result<Vec<DbLibrary>> {
+    sqlx::query_as(
+        "
+        select id, name, address
+        from libraries
+        where owner_id = $1;
+        ",
+    )
+    .bind(user_id)
     .fetch_all(db)
     .await
     .map_err(crate::Error::from)
