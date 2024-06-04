@@ -1,15 +1,17 @@
 mod due_date;
 mod lending_date;
 
+mod active;
 mod lend;
 
+pub use active::active_lendings;
 pub use lend::lend_book;
 
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    auth::UserId,
-    books::BookId,
+    auth::{User, UserId},
+    books::{Book, BookId},
     id::{tag, Id},
 };
 
@@ -33,8 +35,8 @@ pub struct NewLending {
 #[serde(rename_all = "camelCase")]
 pub struct Lending {
     pub id: LendingId,
-    pub book_id: BookId,
-    pub lendee_id: UserId,
+    pub book: Book,
+    pub lendee: User,
     pub lent_on: LendingDate,
     pub due: DueDate,
 }

@@ -41,5 +41,6 @@ create table lendings(
       references users(id)
       on delete cascade,
     lent_on date not null,
-    due date not null
+    due date not null,
+    returned_on date
 );

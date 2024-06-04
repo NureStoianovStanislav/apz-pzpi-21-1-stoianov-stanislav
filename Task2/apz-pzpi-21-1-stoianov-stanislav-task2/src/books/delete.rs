@@ -3,7 +3,7 @@ use crate::{
     telemetry, Error,
 };
 
-use super::{owner::check_owns, BookId};
+use super::{check_owns, BookId};
 
 #[tracing::instrument(skip(state))]
 pub async fn delete_book(

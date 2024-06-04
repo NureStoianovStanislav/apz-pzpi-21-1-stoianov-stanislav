@@ -4,8 +4,8 @@ use crate::{
 };
 
 use super::{
-    author::Author, genre::Genre, name::Name, owner::check_owns, year::Year,
-    BookId, UpdateBook,
+    author::Author, check_owns, genre::Genre, name::Name, year::Year, BookId,
+    UpdateBook,
 };
 
 #[tracing::instrument(skip(state))]

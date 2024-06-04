@@ -9,6 +9,8 @@ mod delete;
 mod update;
 mod view;
 
+pub use owner::check_owns;
+
 pub use add::add_book;
 pub use delete::delete_book;
 pub use update::update_book;
