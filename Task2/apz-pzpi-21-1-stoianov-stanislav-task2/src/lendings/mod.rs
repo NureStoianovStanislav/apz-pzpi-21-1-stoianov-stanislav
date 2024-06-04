@@ -1,11 +1,14 @@
 mod due_date;
 mod lending_date;
+mod return_date;
 
 mod active;
 mod lend;
+mod returns;
 
 pub use active::active_lendings;
 pub use lend::lend_book;
+pub use returns::return_book;
 
 use serde::{Deserialize, Serialize};
 
@@ -39,4 +42,10 @@ pub struct Lending {
     pub lendee: User,
     pub lent_on: LendingDate,
     pub due: DueDate,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ReturnRequest {
+    pub book_id: BookId,
 }

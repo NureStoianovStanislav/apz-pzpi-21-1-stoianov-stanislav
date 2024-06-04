@@ -7,7 +7,7 @@ use axum::{
 
 use crate::{
     auth::UserId,
-    lendings::{active_lendings, lend_book},
+    lendings::{active_lendings, lend_book, return_book},
     state::AppState,
 };
 
@@ -23,10 +23,14 @@ pub fn router() -> Router<AppState> {
             "/:library_id/pending",
             get(
                 |owner_id: UserId, Path(library_id), State(state)| async move {
-                    active_lendings(owner_id, library_id, state)
-                        .await
-                        .map(Json)
+                    active_lendings(owner_id, library_id, state).await.map(Json)
                 },
             ),
+        )
+        .route(
+            "/return",
+            post(|State(state), Form(return_request)| async move {
+                return_book(return_request, state).await
+            }),
         )
 }
