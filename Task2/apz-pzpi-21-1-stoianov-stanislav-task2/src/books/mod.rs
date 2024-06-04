@@ -7,7 +7,7 @@ mod add;
 mod view;
 
 pub use add::add_book;
-pub use view::list_library_books;
+pub use view::{list_library_books, view_book};
 
 use serde::{Deserialize, Serialize};
 

@@ -7,7 +7,7 @@ use axum::{
 
 use crate::{
     auth::UserId,
-    books::{add_book, list_library_books},
+    books::{add_book, list_library_books, view_book},
     libraries::{
         add_library, delete_library, list_libraries, list_my_libraries,
         update_library, view_library,
@@ -77,6 +77,12 @@ fn books_router() -> Router<AppState> {
             "/",
             get(|Path(library_id), State(state)| async move {
                 list_library_books(library_id, state).await.map(Json)
+            }),
+        )
+        .route(
+            "/:id",
+            get(|Path((library_id, book_id)), State(state)| async move {
+                view_book(library_id, book_id, state).await.map(Json)
             }),
         )
 }
