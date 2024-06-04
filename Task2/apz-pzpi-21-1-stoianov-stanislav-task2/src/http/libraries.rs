@@ -7,18 +7,24 @@ use axum::{
 
 use crate::{
     auth::UserId,
+    books::{add_book, list_library_books},
     libraries::{
-        add_library, delete_library, list_libraries, update_library,
-        view_library,
+        add_library, delete_library, list_libraries, list_my_libraries,
+        update_library, view_library,
     },
     state::AppState,
 };
 
 pub fn router() -> Router<AppState> {
     Router::new()
+        .nest("/:id/books", books_router())
         .route(
             "/",
             get(|State(state)| async move { list_libraries(state).await.map(Json) }),
+        )
+        .route(
+            "/my",
+            get(|user_id: UserId, State(state)| async move { list_my_libraries(user_id, state).await.map(Json) }),
         )
         .route(
             "/:id",
@@ -48,6 +54,29 @@ pub fn router() -> Router<AppState> {
                 delete_library(admin_id, library_id, state)
                     .await
                     .map(|_| StatusCode::OK)
+            }),
+        )
+}
+
+fn books_router() -> Router<AppState> {
+    Router::new()
+        .route(
+            "/",
+            post(
+                |owner_id: UserId,
+                 Path(library_id),
+                 State(state),
+                 Form(book)| async move {
+                    add_book(owner_id, library_id, book, state)
+                        .await
+                        .map(|_| StatusCode::CREATED)
+                },
+            ),
+        )
+        .route(
+            "/",
+            get(|Path(library_id), State(state)| async move {
+                list_library_books(library_id, state).await.map(Json)
             }),
         )
 }
