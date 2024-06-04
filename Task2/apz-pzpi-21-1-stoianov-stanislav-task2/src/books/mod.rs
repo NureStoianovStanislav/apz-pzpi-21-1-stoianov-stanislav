@@ -5,10 +5,12 @@ mod owner;
 mod year;
 
 mod add;
+mod delete;
 mod update;
 mod view;
 
 pub use add::add_book;
+pub use delete::delete_book;
 pub use update::update_book;
 pub use view::{list_library_books, view_book};
 
