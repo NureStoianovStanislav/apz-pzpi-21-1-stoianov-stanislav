@@ -4,49 +4,53 @@ use crate::{
     state::AppState,
 };
 
-use super::{address::Address, name::Name, NewLibrary};
+use super::{address::Address, name::Name, LibraryId, UpdateLibrary};
 
 #[tracing::instrument(skip(state))]
-pub async fn add_library(
+pub async fn update_library(
     admin_id: UserId,
-    library: NewLibrary,
+    library_id: LibraryId,
+    library: UpdateLibrary,
     state: AppState,
 ) -> crate::Result<()> {
     check_permission(admin_id, &state, |role| {
         matches!(role, Role::Administrator)
     })
     .await?;
-    let library = CreateLibrary {
+    let library = DbLibrary {
+        id: library_id.sql_id(&state.id_cipher)?,
         owner_id: library.owner_id.sql_id(&state.id_cipher)?,
         name: Name::new(library.name)?,
         address: Address::new(library.address)?,
     };
-    create_library(&library, &state.database).await
+    update_db_library(&library, &state.database).await
 }
 
 #[derive(Clone, Debug)]
-struct CreateLibrary {
+struct DbLibrary {
+    id: i64,
     owner_id: i64,
     name: Name,
     address: Address,
 }
 
 #[tracing::instrument(skip(db), err(Debug))]
-async fn create_library(
-    library: &CreateLibrary,
+async fn update_db_library(
+    library: &DbLibrary,
     db: &Database,
 ) -> crate::Result<()> {
     sqlx::query(
         "
-        insert into libraries
-          (name, address, owner_id)
-        values
-          ($1, $2, $3);
+        update libraries
+        set (name, address, owner_id)
+          = ($1, $2, $3)
+        where id = $4;
         ",
     )
     .bind(&library.name)
     .bind(&library.address)
     .bind(library.owner_id)
+    .bind(library.id)
     .execute(db)
     .await
     .map(|_| ())
