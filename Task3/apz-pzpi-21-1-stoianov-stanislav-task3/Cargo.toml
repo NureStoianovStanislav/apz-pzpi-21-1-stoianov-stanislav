@@ -1,0 +1,16 @@
+[package]
+name = "ligma"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+reqwest = "0.12.4"
+anyhow = "1.0.86"
+chrono = { version = "0.4.38", features = ["serde"] }
+rand = "0.8.5"
+serde = { version = "1.0.203", features = ["derive"] }
+
+[dependencies.tokio]
+version = "1.37.0"
+default-features = false
+features = ["macros", "rt-multi-thread"]
