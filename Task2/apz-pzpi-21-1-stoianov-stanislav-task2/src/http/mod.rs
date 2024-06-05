@@ -1,4 +1,5 @@
 mod auth;
+mod backup;
 mod error;
 mod lendings;
 mod libraries;
@@ -25,4 +26,5 @@ fn router() -> Router<AppState> {
         .nest("/auth", auth::router())
         .nest("/libraries", libraries::router())
         .nest("/lendings", lendings::router())
+        .nest("/backup", backup::router())
 }
