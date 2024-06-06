@@ -1,4 +1,5 @@
 mod address;
+mod rating;
 mod currency;
 mod daily_rate;
 mod name;
@@ -26,7 +27,7 @@ use self::{
     currency::{Currency, UnvalidatedCurrency},
     daily_rate::{DailyRate, UnvalidatedDailyRate},
     name::{Name, UnvalidatedName},
-    overdue_rate::{OverdueRate, UnvalidatedOverdueRate},
+    overdue_rate::{OverdueRate, UnvalidatedOverdueRate}, rating::Rating,
 };
 
 pub type LibraryId = Id<{ tag("library") }>;
@@ -52,6 +53,19 @@ pub struct Library {
     pub overdue_rate: OverdueRate,
     pub currency: Currency,
 }
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RatedLibrary {
+    pub id: LibraryId,
+    pub name: Name,
+    pub address: Address,
+    pub daily_rate: DailyRate,
+    pub overdue_rate: OverdueRate,
+    pub currency: Currency,
+    pub rating: Rating
+}
+
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]

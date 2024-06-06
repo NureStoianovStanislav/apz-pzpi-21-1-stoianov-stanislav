@@ -18,7 +18,7 @@ use crate::{
     id::{tag, Id},
 };
 
-use self::{
+pub use self::{
     due_date::{DueDate, LentFor},
     lending_date::{LendingDate, UnvalidatedLendingDate},
 };
