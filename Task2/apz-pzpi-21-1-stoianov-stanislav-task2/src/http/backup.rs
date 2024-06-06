@@ -3,6 +3,7 @@ use axum::{extract::State, routing::get, Router};
 
 use crate::{
     auth::{check_permission, Role, UserId},
+    config::BackupConfig,
     state::AppState,
 };
 
@@ -14,15 +15,16 @@ pub fn router() -> Router<AppState> {
                 matches!(role, Role::Administrator)
             })
             .await?;
-            backup()
+            backup(&state.backup_config)
         }),
     )
 }
 
 #[tracing::instrument(err(Debug))]
-fn backup() -> crate::Result<Vec<u8>> {
-    std::process::Command::new("docker")
-        .args(["compose", "exec", "postgres", "pg_dump"])
+fn backup(config: &BackupConfig) -> crate::Result<Vec<u8>> {
+    let args = config.args.iter().collect::<Vec<_>>();
+    std::process::Command::new(config.cmd.as_str())
+        .args(args.as_slice())
         .output()
         .map(|out| out.stdout)
         .context("execute pg_dump")

@@ -31,6 +31,7 @@ pub struct AppConfig {
     pub id_key: [u8; 16],
     pub jwt: JwtConfig,
     pub hasher: HasherConfig,
+    pub backup: BackupConfig,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -65,6 +66,12 @@ pub struct JwtConfig {
     pub access_ttl: Duration,
     #[serde_as(as = "DurationSeconds<u64>")]
     pub refresh_ttl: Duration,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct BackupConfig {
+    pub cmd: String, 
+    pub args: Vec<String>,
 }
 
 impl Config {

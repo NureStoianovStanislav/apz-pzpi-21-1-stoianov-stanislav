@@ -23,3 +23,7 @@ jwt:
   key: ""
   access_ttl: 900
   refresh_ttl: 2678400
+
+backup: 
+  cmd: docker
+  args: [compose, exec, postgres, pg_dump]
