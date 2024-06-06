@@ -11,5 +11,6 @@ mod auth;
 mod books;
 mod lendings;
 mod libraries;
+mod backup;
 
 use error::*;
