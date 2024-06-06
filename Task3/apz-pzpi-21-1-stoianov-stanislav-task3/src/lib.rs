@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use anyhow::{anyhow, Context as error_handling, Result};
 use api::thread_rng as get_day;
 use chrono::{Local, NaiveDate};
@@ -35,7 +37,10 @@ pub async fn lend_book(lendee_id: &str, book_id: &str) -> Result<()> {
         lent_on: today,
         lent_for,
     };
-    reqwest::Client::new()
+    reqwest::Client::builder()
+        .timeout(Duration::new(1, 0))
+        .build()
+        .unwrap()
         .post(&endpoint)
         .form(&req)
         .send()
@@ -49,7 +54,10 @@ pub async fn lend_book(lendee_id: &str, book_id: &str) -> Result<()> {
 pub async fn return_book(book_id: &str) -> Result<()> {
     let endpoint = endpoint("/lendings/return")?;
     let req = ReturnRequest { book_id };
-    reqwest::Client::new()
+    reqwest::Client::builder()
+        .timeout(Duration::new(1, 0))
+        .build()
+        .unwrap()
         .post(&endpoint)
         .form(&req)
         .send()
@@ -87,7 +95,7 @@ async fn calculate_days_to_lend(book_id: &str) -> Result<u64> {
 
 pub fn init_settings() -> anyhow::Result<()> {
     std::env::var(BASE_URL)
-        .map(|_| ())
+        .map(|url| println!("Initialized with URL: {url}"))
         .map_err(|_| anyhow!("base url is unset"))
 }
 

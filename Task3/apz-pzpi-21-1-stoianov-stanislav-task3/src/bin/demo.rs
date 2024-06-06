@@ -1,27 +1,33 @@
 use std::io::Write;
 
-use ligma as library;
+use ligma as lib;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    library::set_base_url("http://localhost:8080");
-    library::init_settings()?;
+    lib::set_base_url("http://localhost:8080");
+    lib::init_settings()?;
     loop {
         let input = prompt("Enter your command:");
         match input.as_str() {
             "settings" => {
                 let url = prompt("Base URL:");
-                library::set_base_url(&url);
+                lib::set_base_url(&url);
             }
             "lend" => {
                 let lendee_id = prompt("Who lends?");
                 let book_id = prompt("Which book?");
-                library::lend_book(&lendee_id, &book_id).await?;
+                lib::lend_book(&lendee_id, &book_id)
+                    .await
+                    .inspect_err(|e| println!("Error: {e:?}"))
+                    .ok();
                 println!("Happy reading");
             }
             "return" => {
                 let book_id = prompt("Which book?");
-                library::return_book(&book_id).await?;
+                lib::return_book(&book_id)
+                    .await
+                    .inspect_err(|e| println!("Error: {e:?}"))
+                    .ok();
                 println!("Returned the book successfully");
             }
             "quit" => break,
