@@ -17,6 +17,15 @@ function BackupPage() {
       .catch((error) => console.log(error.message));
   };
 
+  const handleDownload = () => {
+    const element = document.createElement("a");
+    const file = new Blob([backup], { type: 'text/plain' });
+    element.href = URL.createObjectURL(file);
+    element.download = "backup.sql";
+    document.body.appendChild(element);
+    element.click();
+  };
+
   return (
     <div className="p-4">
       <div className="flex mb-10 gap-10 items-center">
@@ -26,6 +35,13 @@ function BackupPage() {
           onClick={handleGet}
         >
           {`${locale.requestBackup}`}
+        </button>
+        <button
+          className="bg-green-500 text-white px-4 py-2 rounded disabled:opacity-70"
+          onClick={handleDownload}
+          disabled={!backup}
+        >
+      {`${locale.downloadBackup}`}
         </button>
       </div>
       <textarea

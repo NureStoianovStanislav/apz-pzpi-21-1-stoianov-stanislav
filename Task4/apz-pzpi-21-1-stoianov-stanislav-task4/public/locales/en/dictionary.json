@@ -3,6 +3,7 @@
     "requestBackup": "Get Backup",
     "libraries": "Libraries",
     "backup": "Backup",
+    "downloadBackup": "Download backup",
     "login": "Login",
     "signup": "Signup",
     "librariesTitle": "Libraries",
