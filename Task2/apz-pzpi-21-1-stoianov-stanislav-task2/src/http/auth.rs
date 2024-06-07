@@ -6,12 +6,15 @@ use axum::{
     routing::{get, post, put},
     Form, Json, Router,
 };
-use axum_extra::extract::{cookie::Cookie, CookieJar};
+use axum_extra::extract::{
+    cookie::{Cookie, SameSite},
+    CookieJar,
+};
 
 use crate::{
     auth::{
-        get_user, parse_access_token, sign_in, sign_up, update_user, TokenPair,
-        UserId,
+        get_all_users, get_user, parse_access_token, sign_in, sign_up,
+        update_user, TokenPair, UserId,
     },
     state::AppState,
     Error,
@@ -32,7 +35,9 @@ pub fn router() -> Router<AppState> {
         )
         .route(
             "/sign-in",
-            post(|State(state), Form(credentials)| sign_in(credentials, state)),
+            post(|State(state), Form(credentials)| async move {
+                sign_in(credentials, state).await
+            }),
         )
         .route(
             "/me",
@@ -42,8 +47,14 @@ pub fn router() -> Router<AppState> {
         )
         .route(
             "/me",
-            put(|id: UserId, State(state), Json(user_info)| {
-                update_user(id, user_info, state)
+            put(|id: UserId, State(state), Json(user_info)| async move {
+                update_user(id, user_info, state).await
+            }),
+        )
+        .route(
+            "/users",
+            get(|admin_id: UserId, State(state)| async move {
+                get_all_users(admin_id, state).await.map(Json)
             }),
         )
 }
@@ -70,12 +81,14 @@ impl IntoResponse for TokenPair {
         let access = {
             let mut cookie = Cookie::new(ACCESS_TOKEN, self.access_token);
             cookie.set_path("/");
+            cookie.set_same_site(SameSite::None);
             cookie.set_http_only(true);
             cookie
         };
         let refresh = {
             let mut cookie = Cookie::new(REFRESH_TOKEN, self.refresh_token);
             cookie.set_path("/auth/refresh");
+            cookie.set_same_site(SameSite::None);
             cookie.set_http_only(true);
             cookie
         };

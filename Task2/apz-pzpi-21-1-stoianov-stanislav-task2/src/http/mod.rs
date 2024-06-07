@@ -9,6 +9,7 @@ use std::net::SocketAddr;
 use anyhow::Context;
 use axum::Router;
 use tokio::net::TcpListener;
+use tower_http::cors::CorsLayer;
 
 use crate::{config::HttpConfig, state::AppState};
 
@@ -27,4 +28,5 @@ fn router() -> Router<AppState> {
         .nest("/libraries", libraries::router())
         .nest("/lendings", lendings::router())
         .nest("/backup", backup::router())
+        .layer(CorsLayer::very_permissive())
 }

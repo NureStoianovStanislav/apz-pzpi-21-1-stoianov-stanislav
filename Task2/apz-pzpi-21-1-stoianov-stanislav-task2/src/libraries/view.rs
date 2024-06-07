@@ -67,13 +67,16 @@ pub async fn view_library(
         get_library(id, &state.database).await.and_then(|library| {
             library.ok_or(Error::NotFound).inspect_err(telemetry::debug)
         })?;
+    let owner_id =
+        UserId::new(get_owner(id, &state.database).await?, &state.id_cipher);
     let rating =
         get_library_activity(id, &state.database)
             .await
             .map(|activity| {
                 let num_lendings = activity.len() as i64;
                 let business_days = activity.iter().sum::<i64>();
-                business_days / num_lendings + num_lendings
+                business_days.checked_div(num_lendings).unwrap_or_default()
+                    + num_lendings
             })?;
     Ok(RatedLibrary {
         id: LibraryId::new(library.id, &state.id_cipher),
@@ -82,6 +85,7 @@ pub async fn view_library(
         daily_rate: library.daily_rate,
         overdue_rate: library.overdue_rate,
         currency: library.currency,
+        owner_id,
         rating,
     })
 }
@@ -94,6 +98,22 @@ struct DbLibrary {
     daily_rate: DailyRate,
     overdue_rate: OverdueRate,
     currency: Currency,
+}
+
+#[tracing::instrument(skip(db), err(Debug))]
+async fn get_owner(library_id: i64, db: &Database) -> crate::Result<i64> {
+    sqlx::query_as::<_, (_,)>(
+        "
+        select owner_id
+        from libraries
+        where id = $1;
+        ",
+    )
+    .bind(library_id)
+    .fetch_one(db)
+    .await
+    .map(|r| r.0)
+    .map_err(crate::Error::from)
 }
 
 #[tracing::instrument(skip(db), err(Debug))]

@@ -12,7 +12,7 @@ pub use role::Role;
 pub use sign_in::sign_in;
 pub use sign_up::sign_up;
 pub use token::parse_access_token;
-pub use user::{check_permission, get_user, update_user};
+pub use user::{check_permission, get_all_users, get_user, update_user};
 
 use serde::{Deserialize, Serialize};
 

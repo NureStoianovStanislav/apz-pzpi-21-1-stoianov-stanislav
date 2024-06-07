@@ -63,6 +63,7 @@ pub struct RatedLibrary {
     pub daily_rate: DailyRate,
     pub overdue_rate: OverdueRate,
     pub currency: Currency,
+    pub owner_id: UserId,
     pub rating: Rating
 }
 
