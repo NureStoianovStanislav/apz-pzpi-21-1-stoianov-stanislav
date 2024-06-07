@@ -10,8 +10,8 @@ import LoginPage from "./components/LoginPage";
 import SignupPage from "./components/SignupPage";
 import BackupsPage from "./components/BackupPage";
 import LibrariesPage from "./components/LibrariesPage";
-import LibraryDetails from "./components/LibraryDetails";
-import NewLibrary from "./components/NewLibrary";
+import LibraryEdit from "./components/LibraryEdit";
+import NewLibrary from "./components/NewLibraryPage";
 
 function App() {
   return (
@@ -22,7 +22,7 @@ function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/backup" element={<BackupsPage />} />
           <Route path="/libraries" element={<LibrariesPage />} />
-          <Route path="/libraries/:id" element={<LibraryDetails />} />
+          <Route path="/libraries/:id" element={<LibraryEdit />} />
           <Route path="/new-library" element={<NewLibrary />} />
           <Route path="*" element={<Navigate to="/libraries" />} />
         </Routes>
